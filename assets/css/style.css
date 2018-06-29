@@ -13,10 +13,7 @@ ul {
     top:0;
     overflow-y:scroll;
 }
-.rps-selector{
-    display: block;
-    margin: auto;
-}
+
 i{
     cursor: pointer;
 }
@@ -26,6 +23,16 @@ i{
     
     max-width: 200px;
     max-height: 200px;
+}
+
+#rps-selector-1{
+    display: block;
+    margin: auto;
+}
+
+#rps-selector-2{
+    display: block;
+    margin: auto;
 }
 
 /*
