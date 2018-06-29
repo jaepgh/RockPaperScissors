@@ -10,7 +10,7 @@
     <!--BOOTSTRAP IMPORTS-->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
         crossorigin="anonymous">
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
         crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
         crossorigin="anonymous"></script>
@@ -21,11 +21,12 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.1.0/css/all.css" integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt"
         crossorigin="anonymous">
 
-    <!--JQUERY IMPORTS-->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!--FIREBASE IMPORTS-->
+    <script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
 
     <!--CUSTOM IMPORTS-->
     <link rel="stylesheet" type="text/css" href="assets/css/style.css">
+    <script src="assets/javascript/functions.js"> </script>
 
 </head>
 
@@ -43,10 +44,10 @@
                     <div class="card flex-md-row">
                         <div class="card-body d-flex flex-column align-items-start">
                             <strong class="d-inline-block mb-2 text-primary">Nickname:</strong>
-                            <input type="text" class="form-control" placeholder="Player X" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                            <input id="nickname" type="text" class="form-control" placeholder="Player X" aria-label="Recipient's username" aria-describedby="basic-addon2">
                             <br>
                             <br>
-                            <a href="#" class="btn btn-large btn-primary">START GAME</a>
+                            <button class="btn btn-large btn-primary" id="start-btn">START GAME</button>
                         </div>
                     </div>
                 </div>
@@ -60,7 +61,7 @@
     </div>
 
     </div>
-    <div class="container border rounded bg-white mt-3" id="game-screen">
+    <div class="container border rounded bg-white mt-3" id="game-screen" style="display: none">
         <!--GAME-->
         <div class="jumbotron p-4 m-4 bg-white">
             <!--GAME PLAYERS-->
@@ -71,28 +72,28 @@
                         <img class="wait-gif" src="assets/images/waiting.gif" alt="Waiting for player 1">
                     </div>
 
-                    <div id="active-pl-1">
-                        <h3 class="text-center">Player 1</h3>
+                    <div id="active-pl-1" style="display: none">
+                        <h3 class="text-center" id="player1name">Player 1</h3>
                         <!--Options-->
-                        <div class="row mx-auto pt-4 rps-selector">
-                            <i class="far fa-hand-rock fa-3x col-3 m-1"></i>
-                            <i class="far fa-hand-paper fa-3x col-3 m-1"></i>
-                            <i class="far fa-hand-scissors fa-3x col-3 m-1"></i>
+                        <div class="row mx-auto pt-4" id="rps-selector-1" style="visibility: hidden">
+                            <i class="far fa-hand-rock fa-3x col-3 m-1" value="rock"></i>
+                            <i class="far fa-hand-paper fa-3x col-3 m-1" value="paper"></i>
+                            <i class="far fa-hand-scissors fa-3x col-3 m-1" value="scissors"></i>
                         </div>
                         <!--Player Stat-->
                         <div class="row pt-4 pb-3">
                             <div class="col-6">
                                 <strong>Wins: </strong>
-                                <span>0</span>
+                                <span id="wins-1">0</span>
                             </div>
                             <div class="col-6">
                                 <strong>Losses: </strong>
-                                <span>0</span>
+                                <span id="losses-2">0</span>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div id="roundResult" class="col-4">
+                <div id="roundResult" class="col-4" style="visibility: hidden">
                     <h2 class="text-center p-4">Player "X" Won!</h2>
                 </div>
                 <div id="player2" class="col-4">
@@ -100,23 +101,23 @@
                         <h4 class="text-center">Waiting for player 2!</h4>
                         <img class="wait-gif" src="assets/images/waiting.gif" alt="Waiting for player 2">
                     </div>
-                    <div id="active-pl-2">
-                        <h3 class="text-center">Player 2</h3>
+                    <div id="active-pl-2" style="display: none">
+                        <h3 class="text-center" id="player2name">Player 2</h3>
                         <!--Options-->
-                        <div class="row mx-auto pt-3 rps-selector">
-                            <i class="far fa-hand-rock fa-3x col-3 m-1"></i>
-                            <i class="far fa-hand-paper fa-3x col-3 m-1"></i>
-                            <i class="far fa-hand-scissors fa-3x col-3 m-1"></i>
+                        <div class="row mx-auto pt-3" id="rps-selector-2" style="visibility: hidden">
+                            <i class="far fa-hand-rock fa-3x col-3 m-1" value="rock"></i>
+                            <i class="far fa-hand-paper fa-3x col-3 m-1" value="paper"></i>
+                            <i class="far fa-hand-scissors fa-3x col-3 m-1" value="scissors"></i>
                         </div>
                         <!--Player Stat-->
                         <div class="row pt-3 pb-3">
                             <div class="col-6">
                                 <strong>Wins: </strong>
-                                <span>0</span>
+                                <span id="wins-2">0</span>
                             </div>
-                            <div class="col-6">
+                            <div class="col-6" >
                                 <strong>Losses: </strong>
-                                <span>0</span>
+                                <span id="losses-2">0</span>
                             </div>
                         </div>
                     </div>
@@ -124,11 +125,12 @@
             </div>
             <!--GAME CHAT-->
             <div class="row mr-3 ml-3 mt-3">
-                <ul class="border"></ul>
+                <ul class="border" id="message-area"></ul>
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control text-right" placeholder="Hello" aria-label="Recipient's username" aria-describedby="basic-addon2">
+                    <input idtype="text" id="chat-text" class="form-control text-right" placeholder="Hello" aria-label="Recipient's username"
+                        aria-describedby="basic-addon2">
                     <div class="input-group-append">
-                        <button class="btn btn-primary" type="button">Button</button>
+                        <button class="btn btn-primary" type="button" id="chat-btn">SEND</button>
                     </div>
                 </div>
             </div>
@@ -137,23 +139,23 @@
 
     <!--MODAL-->
     <div class="modal" tabindex="-1" role="dialog" aria-hidden="true" id="infoModal">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Modal title</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="modal-text">Modal text.</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    </div>
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="modal-text">Modal text.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
+    </div>
 </body>
 
 </html>
