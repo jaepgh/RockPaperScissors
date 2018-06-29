@@ -15,6 +15,7 @@ var turn = 0;
 var logged = false;
 var chatRef = firebase.database().ref("/chat");
 var playersRef = firebase.database().ref("/players");
+var playerTurn = firebase.database().ref("/turn");
 var database = firebase.database().ref();
 
 var players = [];
@@ -26,7 +27,9 @@ var player = {
     choice: '',
     choice_selected: false
 }
-
+//---------------------------------------------------------//
+//------------------------FUNCTIONS------------------------//
+//---------------------------------------------------------//
 $(document).ready(function () {
     //START THE GAME
     $('#start-btn').on('click', function () {
@@ -43,6 +46,7 @@ $(document).ready(function () {
 
     $('.far').on('click', function () {
         $(this).siblings().hide();
+        $(this).css("pointer-events", "none");
         updateSelection($(this).attr('value'));
     })
 
@@ -62,20 +66,31 @@ database.on('value', function (snap) {
 
             //Check if the user is one of the current players
             if (logged) {
-                players.forEach(element => {
+                snap.val().players.forEach(element => {
                     $('#player' + element.id + 'name').text(element.name);
                     $('#wins-' + element.id).text(element.wins);
                     $('#losses-' + element.id).text(element.losses);
-
 
                     if (player.id !== element.id) {
                         showPlayer(element.id);
                     }
                 });
+
+                if (!bothPlayerSelected()) {
+                    waitingForPlayer();
+                }
             }
         }
     }
+});
 
+playerTurn.on('value', function (snap) {
+    if (logged) {
+        if (bothPlayerSelected()) {
+            defineWiner();
+            setTimeout(newGame, 5000);
+        }
+    }
 });
 
 //MAIN FUNCTIONS
@@ -134,18 +149,16 @@ function updateSelection(selection) {
 
         database.update({
             "turn": temp
-        });
-
-        if (bothPlayerSelected()) {
-            defineWiner();
-        } else {
-            waitingForPlayer(temp);
-        }
+        })
     });
 }
 
-function waitingForPlayer(playerNumber) {
-    console.log('Waiting for player ' + playerNumber);
+function waitingForPlayer() {
+    if (nonePlayerSelected()) {
+        //Do nothing
+    } else {
+        updateMessageBoard();
+    }
 }
 
 function bothPlayerSelected() {
@@ -153,7 +166,6 @@ function bothPlayerSelected() {
         return false;
     } else {
         var selected = 0;
-
         players.forEach(element => {
             if (element.choice_selected) {
                 selected++;
@@ -163,17 +175,134 @@ function bothPlayerSelected() {
     }
 }
 
-function defineWiner(){
-    if () {
-        
+function nonePlayerSelected() {
+    if (players.length < 1) {
+        return false;
     } else {
-        
+        var selected = 0;
+        players.forEach(element => {
+            if (!element.choice_selected) {
+                selected++;
+            }
+        });
+
+        return selected === players.length;
     }
 }
 
+function defineWiner() {
+    var otherPlayer = getOtherPlayer();
+    if ((player.choice === 'rock') && (otherPlayer.choice === 'paper')) {
+        //You lose
+        increaseLosses();
+        updateBoard('You lose, ' + otherPlayer.name + ' won!');
+    } else if ((player.choice === 'rock') && (otherPlayer.choice === 'scissors')) {
+        //You won
+        increaseWins();
+        updateBoard('Congrats, you won!');
+    } else if ((player.choice === 'paper') && (otherPlayer.choice === 'scissors')) {
+        //You lose
+        increaseLosses();
+        updateBoard('You lose, ' + otherPlayer.name + ' won!');
+    } else if ((player.choice === 'paper') && (otherPlayer.choice === 'rock')) {
+        //You won
+        increaseWins();
+        updateBoard('Congrats, you won!');
+    } else if ((player.choice === 'scissors') && (otherPlayer.choice === 'rock')) {
+        //You lose
+        increaseLosses();
+        updateBoard('You lose, ' + otherPlayer.name + ' won!');
+    } else if ((player.choice === 'scissors') && (otherPlayer.choice === 'paper')) {
+        //You won
+        increaseWins();
+        updateBoard('Congrats, you won!');
+    } else {
+        //Tie Game
+        updateBoard('Tie Game!');
+    }
 
+    //Preparing for next match
+    //Set both players to selected no.
+    players.forEach(element => {
+        element.choice_selected = false;
+    });
+
+    //Update Firebase
+    database.update({
+        "players": players,
+        "turn": 0
+    })
+
+}
+
+function increaseWins() {
+    //Update local Array
+    players.forEach(element => {
+        if (element.name === player.name) {
+            element.wins += 1;
+        } else {
+            element.losses += 1;
+        }
+    });
+}
+
+function increaseLosses() {
+    players.forEach(element => {
+        if (element.name === player.name) {
+            element.losses += 1;
+        } else {
+            element.wins += 1;
+        }
+    });
+}
+
+function updateMessageBoard() {
+    if (turn === player.id) {
+        // Waiting for you!
+        updateBoard('Waiting for you!');
+    } else {
+        if (turn === 0) {
+            //Do nothing
+        } else {
+            updateBoard('Waiting for your Opponent!');
+        }
+    }
+}
+//------------------------------------------------------------------------------------
+function newGame() {
+    $('#roundResult').empty();
+    $('.far').each(function () {
+        $(this).show();
+        $(this).css("pointer-events", "auto");
+    });
+}
 
 //AUXILIAR FUNCTIONS
+
+//Return the second player
+function getOtherPlayer() {
+    var temp;
+    players.forEach(element => {
+        if (element.name !== player.name) {
+            temp = element;
+        }
+    });
+    return temp;
+}
+
+//Update HTML of Game message board
+function updateBoard(message) {
+    $('#roundResult').empty();
+
+    var h2Tag = $('<h2>');
+    h2Tag.addClass('text-center');
+    h2Tag.addClass('p-4');
+    h2Tag.text(message);
+
+    $('#roundResult').append(h2Tag);
+    $('#roundResult').css('visibility', 'visible');
+}
+
 
 //Show a modal with a personalized message.
 function informationModal(outputTitle, outputMessage) {
@@ -208,10 +337,10 @@ function admitMorePlayers() {
 //DATA MANIPULATION FUNCTIONS
 function addPlayer() {
     logged = true;
+
     database.set({
         players: players,
         turn: turn
-
     })
 }
 
