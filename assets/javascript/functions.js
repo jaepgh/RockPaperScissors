@@ -51,9 +51,10 @@ $(document).ready(function () {
     })
 
     $('#chat-btn').on('click', function () {
-        sendMessage($('#chat-text').val().trim());
+        sendMessage($('#chat-text').val().trim(), false);
         clearField('#chat-text');
     })
+
 });
 
 database.on('value', function (snap) {
@@ -114,7 +115,9 @@ $(window).on("unload", function () {
     })
 
     //Message to the chat
-    sendMessage('System: ' + player.name + ' has disconnected.');
+    if (logged) {
+        sendMessage(player.name + ' has disconnected.', true);
+    }
 });
 
 //MAIN FUNCTIONS
@@ -404,9 +407,17 @@ function removeCurrentPlayer() {
     players.splice(pos, 1);
 }
 
+//hide a player based on the ID
 function hidePlayer(pid) {
     $('#waiting-pl-' + pid).delay(300).fadeIn('slow');
     $('#active-pl-' + pid).hide();
+}
+
+//remove all the message from the chat
+function cleanChat() {
+    $('li').each(function () {
+        $(this).remove();
+    });
 }
 
 //DATA MANIPULATION FUNCTIONS
@@ -417,12 +428,14 @@ function addPlayer() {
         players: players,
         turn: turn
     })
+    
+    cleanChat();
 }
 
-function sendMessage(pmessage) {
+function sendMessage(pmessage, system) {
 
     chatRef.push().set({
-        player_name: player.name,
+        player_name: system ? 'System' : player.name,
         message: pmessage
     })
 }
