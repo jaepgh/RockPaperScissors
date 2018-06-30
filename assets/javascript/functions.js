@@ -88,9 +88,33 @@ playerTurn.on('value', function (snap) {
     if (logged) {
         if (bothPlayerSelected()) {
             defineWiner();
+            //Update Firebase
+            database.update({
+                "turn": 0
+            })
             setTimeout(newGame, 5000);
         }
     }
+});
+
+playersRef.on("child_removed", function (snapshot) {
+    var index = (player.id === 1) ? 2 : 1;
+    hidePlayer(index);
+});
+
+//On window unload, remove the user from the database
+$(window).on("unload", function () {
+    //Remove from local list
+    removeCurrentPlayer();
+
+    //Remove from the Database
+    database.update({
+        "players": players,
+        "turn": 0
+    })
+
+    //Message to the chat
+    sendMessage(System + ' has disconnected.');
 });
 
 //MAIN FUNCTIONS
@@ -110,9 +134,10 @@ function proceedToTheGame(nickname) {
 //Modify the player object
 function createPlayer(nickname) {
     if (admitMorePlayers()) {
+        var tempId = getAvaliableId();
         player.name = nickname;
         players.push(player);
-        player.id = players.length;
+        player.id = tempId;
 
         //add player to the database
         addPlayer();
@@ -135,14 +160,17 @@ function showPlayer(createdPlayer) {
 }
 
 function updateSelection(selection) {
+    //Get current player
+    var index = currentPlayerIndex(player.id);
+
+    //Update local player 
     player.choice = selection;
     player.choice_selected = true;
 
-    //Update current player choice
-    var choiseRef = playersRef.child(player.id - 1);
-    choiseRef.update({
-        "choice": selection,
-        "choice_selected": true
+
+    players[index] = player;
+    database.update({
+        "players": players,
     }).then(function () {
         //Update current turn
         var temp = (player.id === 1) ? 2 : 1;
@@ -191,7 +219,8 @@ function nonePlayerSelected() {
 }
 
 function defineWiner() {
-    var otherPlayer = getOtherPlayer();
+    var otherPlayer = getOtherPlayer(player.id);
+
     if ((player.choice === 'rock') && (otherPlayer.choice === 'paper')) {
         //You lose
         increaseLosses();
@@ -230,15 +259,18 @@ function defineWiner() {
     //Update Firebase
     database.update({
         "players": players,
-        "turn": 0
     })
 
 }
 
 function increaseWins() {
+
     //Update local Array
     players.forEach(element => {
-        if (element.name === player.name) {
+        if (element.id === player.id) {
+            //Local Player
+            player.wins += 1;
+            //Array
             element.wins += 1;
         } else {
             element.losses += 1;
@@ -248,7 +280,10 @@ function increaseWins() {
 
 function increaseLosses() {
     players.forEach(element => {
-        if (element.name === player.name) {
+        if (element.id === player.id) {
+            //Local Player
+            player.losses += 1;
+            //Array
             element.losses += 1;
         } else {
             element.wins += 1;
@@ -268,7 +303,6 @@ function updateMessageBoard() {
         }
     }
 }
-//------------------------------------------------------------------------------------
 function newGame() {
     $('#roundResult').empty();
     $('.far').each(function () {
@@ -283,10 +317,23 @@ function newGame() {
 function getOtherPlayer() {
     var temp;
     players.forEach(element => {
-        if (element.name !== player.name) {
+        if (element.id !== player.id) {
             temp = element;
         }
     });
+    return temp;
+}
+
+function currentPlayerIndex(pid) {
+    var temp = -1;
+
+    for (let index = 0; index < players.length; index++) {
+        if (players[index].id === pid) {
+            temp = index;
+        }
+
+    }
+
     return temp;
 }
 
@@ -332,6 +379,34 @@ function admitMorePlayers() {
         return players.length < 2;
     }
 
+}
+
+//Base on the existing or not player provides an id (1 or 2) 
+function getAvaliableId() {
+    if (players.length > 0) {
+        return players[0].id === 1 ? 2 : 1;
+    } else {
+        return 1
+    }
+}
+
+//Remove the current player from the existing array
+function removeCurrentPlayer() {
+    var pos = 0;
+
+    for (let index = 0; index < players.length; index++) {
+        if (players[index].id === player.id) {
+
+            pos = index;
+        }
+    }
+
+    players.splice(pos, 1);
+}
+
+function hidePlayer(pid) {
+    $('#waiting-pl-' + pid).delay(300).fadeIn('slow');
+    $('#active-pl-' + pid).hide();
 }
 
 //DATA MANIPULATION FUNCTIONS
