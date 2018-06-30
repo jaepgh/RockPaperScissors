@@ -114,7 +114,7 @@ $(window).on("unload", function () {
     })
 
     //Message to the chat
-    sendMessage(System + ' has disconnected.');
+    sendMessage('System: ' + player.name + ' has disconnected.');
 });
 
 //MAIN FUNCTIONS
