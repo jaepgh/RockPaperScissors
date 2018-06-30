@@ -34,7 +34,14 @@ i{
     display: block;
     margin: auto;
 }
-
+.img-fluid{
+    max-width: 300px;
+    height: auto;
+    float: right;
+}
+nav{
+    margin-bottom: 50px;
+}
 /*
   These rules take effect when the browser's width
   is either 640px or less.
@@ -42,5 +49,8 @@ i{
 @media screen and (max-width: 784px) {
     h1{
         font-size: 30px;
+    }
+    .img-fluid{
+        visibility: hidden;
     }
 }
